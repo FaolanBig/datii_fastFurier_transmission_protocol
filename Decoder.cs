@@ -1,4 +1,6 @@
-﻿using System;
+﻿// This code is part of the datii_fastFurier_transmission_protocol project.
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,5 +10,40 @@ namespace datii_fastFurier_transmission_protocol
 {
     internal class Decoder
     {
+        private static readonly int BaseFrequency = 1000;
+        private static readonly int StepFrequency = 200;
+        private const double Tolerance = 50.0; // Hz
+
+        public static string DecodeFrequencies(List<double> frequencies)
+        {
+            var chars = new List<char>();
+            var currentCharFrequencies = new List<double>();
+
+            foreach (var freq in frequencies)
+            {
+                if (Math.Abs(freq - (BaseFrequency + 8 * StepFrequency)) < Tolerance)
+                {
+                    byte value = 0;
+                    foreach (var f in currentCharFrequencies)
+                    {
+                        for (int i = 0; i < 8; i++)
+                        {
+                            if (Math.Abs(f - (BaseFrequency + i * StepFrequency)) < Tolerance)
+                            {
+                                value |= (byte)(1 << i);
+                            }
+                        }
+                    }
+                    chars.Add((char)value);
+                    currentCharFrequencies.Clear();
+                }
+                else
+                {
+                    currentCharFrequencies.Add(freq);
+                }
+            }
+
+            return new string(chars.ToArray());
+        }
     }
 }

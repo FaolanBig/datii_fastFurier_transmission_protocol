@@ -1,4 +1,6 @@
-﻿using System;
+﻿// This code is part of the datii_fastFurier_transmission_protocol project.
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
