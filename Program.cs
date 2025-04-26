@@ -49,7 +49,7 @@ namespace datii_fastFurier_transmission_protocol
                 var samples = AudioRecorder.Record(5.0); // record for 5 seconds
 
                 Console.WriteLine("Analyzing frequencies...");
-                var fftResult = FFT.Transform(samples);
+                var fftResult = FastFurier.Transform(samples);
                 var detectedFrequencies = FrequencyAnalyzer.GetTopFrequencies(fftResult, 44100, 100)
                                                             .Select(x => x.frequency)
                                                             .ToList();
