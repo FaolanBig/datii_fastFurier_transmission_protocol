@@ -9,39 +9,80 @@ using System.Threading.Tasks;
 
 namespace datii_fastFurier_transmission_protocol
 {
-    internal class AudioRecorder
-        // This class is responsible for recording audio from the microphone.
-        // It uses NAudio library to handle audio input.
-        // The recorded audio is returned as an array of floats representing the samples.
+    internal class AudioRecorder : IDisposable
     {
-        public static float[] Record(double durationSeconds)
+        private WaveInEvent waveIn;
+        private List<float> audioBuffer = new List<float>();
+        private bool isRecording = false;
+
+        public int SampleRate { get; private set; } = 44100;
+        public int BufferMilliseconds { get; private set; } = 100;
+        public int Bits { get; private set; } = 16;
+        public int Channels { get; private set; } = 1;
+
+        public event Action<byte[]> DataAvailable;
+
+        public AudioRecorder()
         {
-            int sampleRate = 44100;
-            int channels = 1;
-            int bufferSize = (int)(sampleRate * durationSeconds);
-            var buffer = new float[bufferSize];
+            waveIn = new WaveInEvent();
+            waveIn.WaveFormat = new WaveFormat(SampleRate, Bits, Channels);
+            waveIn.BufferMilliseconds = BufferMilliseconds;
+            waveIn.DataAvailable += OnDataAvailable;
+        }
 
-            using (var waveIn = new WaveInEvent())
+        public void StartRecording()
+        {
+            if (!isRecording)
             {
-                waveIn.WaveFormat = new WaveFormat(sampleRate, channels);
-                int offset = 0;
-
-                waveIn.DataAvailable += (s, e) =>
-                {
-                    for (int index = 0; index < e.BytesRecorded; index += 2)
-                    {
-                        if (offset >= buffer.Length) break;
-                        short sample = (short)(e.Buffer[index] | (e.Buffer[index + 1] << 8));
-                        buffer[offset++] = sample / 32768f;
-                    }
-                };
-
+                audioBuffer.Clear();
                 waveIn.StartRecording();
-                System.Threading.Thread.Sleep((int)(durationSeconds * 1000));
+                isRecording = true;
+            }
+        }
+
+        public void StopRecording()
+        {
+            if (isRecording)
+            {
                 waveIn.StopRecording();
+                isRecording = false;
+            }
+        }
+
+        public float[] GetAudioSamples(int durationMilliseconds)
+        {
+            int samplesNeeded = (int)(SampleRate * durationMilliseconds / 1000);
+            while (audioBuffer.Count < samplesNeeded)
+            {
+                System.Threading.Thread.Sleep(10);
             }
 
-            return buffer;
+            lock (audioBuffer)
+            {
+                var samples = audioBuffer.Take(samplesNeeded).ToArray();
+                audioBuffer.RemoveRange(0, samplesNeeded);
+                return samples;
+            }
+        }
+
+        private void OnDataAvailable(object sender, WaveInEventArgs e)
+        {
+            DataAvailable?.Invoke(e.Buffer);
+
+            // Convert byte[] to float[]
+            lock (audioBuffer)
+            {
+                for (int i = 0; i < e.BytesRecorded; i += 2)
+                {
+                    short sample = BitConverter.ToInt16(e.Buffer, i);
+                    audioBuffer.Add(sample / 32768f);
+                }
+            }
+        }
+
+        public void Dispose()
+        {
+            waveIn.Dispose();
         }
     }
 }

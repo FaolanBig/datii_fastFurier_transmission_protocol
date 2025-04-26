@@ -10,62 +10,68 @@ namespace datii_fastFurier_transmission_protocol
 {
     internal class Program
     {
-        static void Main(string[] args)
+        static int Main(string[] args)
         {
-            if (args.Length != 2)
+            if (args.Length < 2)
             {
                 Console.WriteLine("Usage:");
-                Console.WriteLine("  program.exe send <file_to_send>");
-                Console.WriteLine("  program.exe receive <folder_to_receive_to>");
-                return;
+                Console.WriteLine("  To send:    program.exe send file_to_send");
+                Console.WriteLine("  To receive: program.exe receive folder_to_receive_to");
+                return 1;
             }
 
-            string mode = args[0];
-            string path = args[1];
+            string mode = args[0].ToLower();
 
-            if (mode == "send")
+            try
             {
-                if (!File.Exists(path))
+                if (mode == "send")
                 {
-                    Console.WriteLine($"File not found: {path}");
-                    return;
+                    if (args.Length < 2)
+                    {
+                        Console.WriteLine("Please specify file to send");
+                        return 1;
+                    }
+
+                    string filePath = args[1];
+                    if (!File.Exists(filePath))
+                    {
+                        Console.WriteLine($"File not found: {filePath}");
+                        return 1;
+                    }
+
+                    string text = File.ReadAllText(filePath);
+                    Encoder encoder = new Encoder();
+                    encoder.Transmit(text);
                 }
-
-                string text = File.ReadAllText(path);
-                var frequencies = Encoder.EncodeText(text);
-
-                Console.WriteLine("Sending file...");
-                AudioPlayer.PlayFrequencies(frequencies);
-                Console.WriteLine("File sent.");
-            }
-            else if (mode == "receive")
-            {
-                if (!Directory.Exists(path))
+                else if (mode == "receive")
                 {
-                    Directory.CreateDirectory(path);
+                    string folderPath = args.Length > 1 ? args[1] : ".";
+                    if (!Directory.Exists(folderPath))
+                    {
+                        Directory.CreateDirectory(folderPath);
+                    }
+
+                    Decoder decoder = new Decoder();
+                    string receivedText = decoder.Receive();
+
+                    string filePath = Path.Combine(folderPath, $"received_{DateTime.Now:yyyyMMdd_HHmmss}.txt");
+                    File.WriteAllText(filePath, receivedText);
+                    Console.WriteLine($"File saved to: {filePath}");
                 }
-
-                Console.WriteLine("Recording audio...");
-                var samples = AudioRecorder.Record(5.0); // record for 5 seconds
-
-                Console.WriteLine("Analyzing frequencies...");
-                var fftResult = FFT.Transform(samples);
-                var detectedFrequencies = FrequencyAnalyzer.GetTopFrequencies(fftResult, 44100, 100)
-                                                            .Select(x => x.frequency)
-                                                            .ToList();
-
-                Console.WriteLine("Decoding text...");
-                string decodedText = Decoder.DecodeFrequencies(detectedFrequencies);
-
-                string outputFile = Path.Combine(path, $"received_{DateTime.Now:yyyyMMdd_HHmmss}.txt");
-                File.WriteAllText(outputFile, decodedText);
-
-                Console.WriteLine($"Received text saved to: {outputFile}");
+                else
+                {
+                    Console.WriteLine("Invalid mode. Use 'send' or 'receive'");
+                    return 1;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                Console.WriteLine($"Unknown mode: {mode}");
+                Console.WriteLine($"Error: {ex.Message}");
+                return 1;
             }
+
+            return 0;
         }
+
     }
 }
