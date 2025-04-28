@@ -31,30 +31,26 @@ namespace datii_fastFurier_transmission_protocol
 {
     internal class AudioPlayer
     {
-        public static void PlayFrequencies(List<double> frequencies)
+        public void PlayTone(double frequency, int durationMs, int sampleRate = 44100)
         {
-            var sampleRate = 44100;
-            var waveOut = new WaveOutEvent();
-            var mixer = new MixingSampleProvider(WaveFormat.CreateIeeeFloatWaveFormat(sampleRate, 1));
-
-            foreach (var freq in frequencies)
+            int samples = (sampleRate * durationMs) / 1000;
+            var buffer = new WaveBuffer(samples * sizeof(float));
+            for (int i = 0; i < samples; i++)
             {
-                var sineWave = new SignalGenerator(sampleRate, 1)
-                {
-                    Gain = 0.2,
-                    Frequency = freq,
-                    Type = SignalGeneratorType.Sin
-                }.Take(TimeSpan.FromMilliseconds(100)); // Play each tone for 100ms
-
-                mixer.AddMixerInput(sineWave);
+                buffer.FloatBuffer[i] = (float)Math.Sin(2 * Math.PI * frequency * i / sampleRate);
             }
 
-            waveOut.Init(mixer);
-            waveOut.Play();
+            using var ms = new WaveFileReader(new WaveFileWriter(new System.IO.MemoryStream(), new WaveFormat(sampleRate, 1))
+            {
+                Length = samples * sizeof(float)
+            });
 
+            using var waveOut = new WaveOutEvent();
+            waveOut.Init(new RawSourceWaveStream(buffer.ByteBuffer, 0, buffer.ByteBuffer.Length, new WaveFormat(sampleRate, 32, 1)));
+            waveOut.Play();
             while (waveOut.PlaybackState == PlaybackState.Playing)
             {
-                System.Threading.Thread.Sleep(100);
+                System.Threading.Thread.Sleep(10);
             }
         }
     }

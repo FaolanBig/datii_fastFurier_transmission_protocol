@@ -29,40 +29,53 @@ namespace datii_fastFurier_transmission_protocol
 {
     internal class Decoder
     {
-        private static readonly int BaseFrequency = 1000;
-        private static readonly int StepFrequency = 200;
-        private const double Tolerance = 50.0; // Hz
+        private readonly double[] Frequencies = { 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000 };
+        private readonly AudioRecorder recorder = new AudioRecorder();
+        private readonly FFT fft = new FFT();
+        private readonly FrequencyAnalyzer analyzer = new FrequencyAnalyzer();
 
-        public static string DecodeFrequencies(List<double> frequencies)
+        public void ReceiveFile(string folderPath)
         {
-            var chars = new List<char>();
-            var currentCharFrequencies = new List<double>();
+            Console.WriteLine("Recording...");
+            recorder.StartRecording();
+            System.Threading.Thread.Sleep(10000); // Aufnahmezeit: 10 Sekunden
+            byte[] rawData = recorder.StopRecording();
+            Console.WriteLine("Recording finished.");
 
-            foreach (var freq in frequencies)
+            // Umwandeln in Float-Daten
+            float[] floatData = new float[rawData.Length / 2];
+            for (int i = 0; i < floatData.Length; i++)
             {
-                if (Math.Abs(freq - (BaseFrequency + 8 * StepFrequency)) < Tolerance)
-                {
-                    byte value = 0;
-                    foreach (var f in currentCharFrequencies)
-                    {
-                        for (int i = 0; i < 8; i++)
-                        {
-                            if (Math.Abs(f - (BaseFrequency + i * StepFrequency)) < Tolerance)
-                            {
-                                value |= (byte)(1 << i);
-                            }
-                        }
-                    }
-                    chars.Add((char)value);
-                    currentCharFrequencies.Clear();
-                }
-                else
-                {
-                    currentCharFrequencies.Add(freq);
-                }
+                floatData[i] = BitConverter.ToInt16(rawData, i * 2) / 32768f;
             }
 
-            return new string(chars.ToArray());
+            List<byte> receivedBytes = new List<byte>();
+            int chunkSize = 44100 / 10; // 100ms Chunks
+
+            for (int i = 0; i < floatData.Length; i += chunkSize)
+            {
+                float[] chunk = floatData.Skip(i).Take(chunkSize).ToArray();
+                if (chunk.Length < chunkSize)
+                    break;
+
+                var fftResult = fft.PerformFFT(chunk);
+                double freq = analyzer.DetectDominantFrequency(fftResult, 44100);
+
+                byte b = 0;
+                for (int j = 0; j < Frequencies.Length; j++)
+                {
+                    if (Math.Abs(freq - Frequencies[j]) < 100) // Frequenz innerhalb 100Hz?
+                    {
+                        b |= (byte)(1 << j);
+                    }
+                }
+                receivedBytes.Add(b);
+            }
+
+            Directory.CreateDirectory(folderPath);
+            string filePath = Path.Combine(folderPath, $"received_{DateTime.Now:yyyyMMddHHmmss}.bin");
+            File.WriteAllBytes(filePath, receivedBytes.ToArray());
+            Console.WriteLine($"File saved to {filePath}");
         }
     }
 }

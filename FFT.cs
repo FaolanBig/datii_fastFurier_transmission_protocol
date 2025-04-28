@@ -25,18 +25,22 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Numerics;
+using MathNet.Numerics.IntegralTransforms;
+
 
 
 namespace datii_fastFurier_transmission_protocol
 {
-    internal class FrequencyAnalyzer
+    internal class FFT
     {
-        public double DetectDominantFrequency(Complex[] fftResult, int sampleRate)
+        public Complex[] PerformFFT(float[] audioData)
         {
-            var magnitudes = fftResult.Select(c => c.Magnitude).ToArray();
-            int maxIndex = Array.IndexOf(magnitudes, magnitudes.Max());
-            double frequency = maxIndex * sampleRate / fftResult.Length;
-            return frequency;
+            Complex[] buffer = new Complex[audioData.Length];
+            for (int i = 0; i < audioData.Length; i++)
+                buffer[i] = new Complex(audioData[i], 0);
+
+            Fourier.Forward(buffer, FourierOptions.Matlab);
+            return buffer;
         }
     }
 }

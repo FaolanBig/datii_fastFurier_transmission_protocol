@@ -29,25 +29,26 @@ namespace datii_fastFurier_transmission_protocol
 {
     internal class Encoder
     {
-        private static readonly int BaseFrequency = 1000; // Hz
-        private static readonly int StepFrequency = 200;  // Hz between bits
+        private readonly double[] Frequencies = { 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000 }; // 8 Frequenzen
+        private readonly AudioPlayer player = new AudioPlayer();
 
-        public static List<double> EncodeText(string text)
+        public void SendFile(string filePath)
         {
-            var frequencies = new List<double>();
-            foreach (char c in text)
+            byte[] data = File.ReadAllBytes(filePath);
+            foreach (byte b in data)
             {
-                byte b = (byte)c;
                 for (int i = 0; i < 8; i++)
                 {
                     if ((b & (1 << i)) != 0)
                     {
-                        frequencies.Add(BaseFrequency + i * StepFrequency);
+                        player.PlayTone(Frequencies[i], 100); // 100 ms pro Ton
+                    }
+                    else
+                    {
+                        System.Threading.Thread.Sleep(100); // Pause für 0-Bit
                     }
                 }
-                frequencies.Add(BaseFrequency + 8 * StepFrequency); // Delimiter after each character
             }
-            return frequencies;
         }
     }
 }

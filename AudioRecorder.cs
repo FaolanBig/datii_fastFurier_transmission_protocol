@@ -33,34 +33,27 @@ namespace datii_fastFurier_transmission_protocol
         // It uses NAudio library to handle audio input.
         // The recorded audio is returned as an array of floats representing the samples.
     {
-        public static float[] Record(double durationSeconds)
+        private WaveInEvent waveIn;
+        private List<byte> recordedData = new List<byte>();
+
+        public void StartRecording(int sampleRate = 44100)
         {
-            int sampleRate = 44100;
-            int channels = 1;
-            int bufferSize = (int)(sampleRate * durationSeconds);
-            var buffer = new float[bufferSize];
-
-            using (var waveIn = new WaveInEvent())
+            waveIn = new WaveInEvent
             {
-                waveIn.WaveFormat = new WaveFormat(sampleRate, channels);
-                int offset = 0;
+                WaveFormat = new WaveFormat(sampleRate, 1)
+            };
+            waveIn.DataAvailable += (s, e) =>
+            {
+                recordedData.AddRange(e.Buffer[..e.BytesRecorded]);
+            };
+            waveIn.StartRecording();
+        }
 
-                waveIn.DataAvailable += (s, e) =>
-                {
-                    for (int index = 0; index < e.BytesRecorded; index += 2)
-                    {
-                        if (offset >= buffer.Length) break;
-                        short sample = (short)(e.Buffer[index] | (e.Buffer[index + 1] << 8));
-                        buffer[offset++] = sample / 32768f;
-                    }
-                };
-
-                waveIn.StartRecording();
-                System.Threading.Thread.Sleep((int)(durationSeconds * 1000));
-                waveIn.StopRecording();
-            }
-
-            return buffer;
+        public byte[] StopRecording()
+        {
+            waveIn.StopRecording();
+            waveIn.Dispose();
+            return recordedData.ToArray();
         }
     }
 }
