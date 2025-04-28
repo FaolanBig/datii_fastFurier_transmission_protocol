@@ -126,7 +126,7 @@
           <mxGeometry x="800" y="200" width="320" height="40" as="geometry" />
         </mxCell>
         <mxCell id="2J6EaBczgjTmdL3EgNtw-14" value="&amp;nbsp;init package" style="triangle;whiteSpace=wrap;html=1;align=left;" vertex="1" parent="1">
-          <mxGeometry x="190" y="180" width="130" height="80" as="geometry" />
+          <mxGeometry x="110" y="180" width="130" height="80" as="geometry" />
         </mxCell>
         <mxCell id="2J6EaBczgjTmdL3EgNtw-17" value="CRC-8_ATM" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="1440" y="200" width="160" height="40" as="geometry" />
@@ -144,6 +144,9 @@
           <mxGeometry x="-0.0042" relative="1" as="geometry">
             <mxPoint as="offset" />
           </mxGeometry>
+        </mxCell>
+        <mxCell id="2J6EaBczgjTmdL3EgNtw-21" value="800 Hz noise" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="240" y="200" width="80" height="40" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
