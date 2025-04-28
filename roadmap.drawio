@@ -128,6 +128,9 @@
         <mxCell id="2J6EaBczgjTmdL3EgNtw-14" value="&amp;nbsp;init package" style="triangle;whiteSpace=wrap;html=1;align=left;" vertex="1" parent="1">
           <mxGeometry x="110" y="180" width="130" height="80" as="geometry" />
         </mxCell>
+        <mxCell id="ChC-5V8Ng1N-vB27C37G-6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="2J6EaBczgjTmdL3EgNtw-17" target="ChC-5V8Ng1N-vB27C37G-5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
         <mxCell id="2J6EaBczgjTmdL3EgNtw-17" value="CRC-8_ATM" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="1640" y="200" width="160" height="40" as="geometry" />
         </mxCell>
@@ -150,6 +153,9 @@
         </mxCell>
         <mxCell id="ChC-5V8Ng1N-vB27C37G-1" value="send 3x" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
           <mxGeometry x="280" y="200" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="ChC-5V8Ng1N-vB27C37G-5" value="if CRC is wrong, output error and abort the action" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="1880" y="190" width="300" height="60" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
