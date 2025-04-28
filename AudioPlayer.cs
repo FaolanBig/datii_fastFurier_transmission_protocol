@@ -34,24 +34,30 @@ namespace datii_fastFurier_transmission_protocol
         public void PlayTone(double frequency, int durationMs, int sampleRate = 44100)
         {
             int samples = (sampleRate * durationMs) / 1000;
-            var buffer = new WaveBuffer(samples * sizeof(float));
+            var buffer = new float[samples];
+
             for (int i = 0; i < samples; i++)
             {
-                buffer.FloatBuffer[i] = (float)Math.Sin(2 * Math.PI * frequency * i / sampleRate);
+                buffer[i] = (float)Math.Sin(2 * Math.PI * frequency * i / sampleRate);
             }
 
-            using var ms = new WaveFileReader(new WaveFileWriter(new System.IO.MemoryStream(), new WaveFormat(sampleRate, 1))
-            {
-                Length = samples * sizeof(float)
-            });
+            var waveFormat = WaveFormat.CreateIeeeFloatWaveFormat(sampleRate, 1);
+            var waveOut = new WaveOutEvent();
+            var provider = new BufferedWaveProvider(waveFormat);
 
-            using var waveOut = new WaveOutEvent();
-            waveOut.Init(new RawSourceWaveStream(buffer.ByteBuffer, 0, buffer.ByteBuffer.Length, new WaveFormat(sampleRate, 32, 1)));
+            byte[] byteBuffer = new byte[buffer.Length * sizeof(float)];
+            Buffer.BlockCopy(buffer, 0, byteBuffer, 0, byteBuffer.Length);
+
+            provider.AddSamples(byteBuffer, 0, byteBuffer.Length);
+            waveOut.Init(provider);
             waveOut.Play();
+
             while (waveOut.PlaybackState == PlaybackState.Playing)
             {
                 System.Threading.Thread.Sleep(10);
             }
+
+            waveOut.Dispose();
         }
     }
 }
