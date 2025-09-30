@@ -8,5 +8,10 @@ namespace datii_fastFurier_transmission_protocol
 {
     internal class Encoder
     {
+        static string encode(string filename)
+        {
+            string newPath = filename;
+            return newPath;
+        }
     }
 }

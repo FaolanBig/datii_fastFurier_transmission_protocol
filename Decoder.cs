@@ -8,5 +8,10 @@ namespace datii_fastFurier_transmission_protocol
 {
     internal class Decoder
     {
+        static string decode(string filename)
+        {
+            string newPath = filename;
+            return newPath;
+        }
     }
 }

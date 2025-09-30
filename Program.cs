@@ -7,7 +7,14 @@ namespace datii_fastFurier_transmission_protocol
     {
         static void Main(string[] args)
         {
+            if (args[0] == "encode")
+            {
+                
+            }
+            else if (args[0] == "decode")
+            {
 
+            }
         }
     }
 }
